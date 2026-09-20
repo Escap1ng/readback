@@ -73,7 +73,7 @@ L4 产物   新增 kvba report --md / PR 段 / commit trailer / 每日 digest
 
 ## 6. 里程碑（顺序不可打乱，验收均可证伪）
 
-- **M0 素材与地基**（先取数，不写新功能）：① 建回放语料（本仓库 47 commits 的 numstat/作者/消息 + 可得的真实 agent 记录，不足则自造 20 个含已知缺陷的快照仓库）；② 证伪关键未知——转录的 `tool_result` 是否携带可解析退出码/`is_error`（判据：≥90% 的 shell 类调用能取到 0/非 0 → 则「零接线也带验证证据」成立；取不到则 L1 退 git-only，形态不变、M2 少一类规则）；③ SQLite 迁移 RFC（`work_unit/evidence/claim/human_answer`）；④ `gate/` 启发式逐条抄成规则清单，不改语义。**验收：`docs/replay-baseline.md` 给出候选规则的命中数与人工核对真阳率；没有这份数不许进 M2。**
+- **M0 素材与地基**（先取数，不写新功能）：① 建回放语料（本仓库 47 commits 的 numstat/作者/消息 + 可得的真实 agent 记录，不足则自造 20 个含已知缺陷的快照仓库）；② 证伪关键未知——转录的 `tool_result` 是否携带可解析退出码/`is_error`（判据：≥90% 的 shell 类调用能取到 0/非 0 → 则「零接线也带验证证据」成立；取不到则 L1 退 git-only，形态不变、M2 少一类规则）；③ SQLite 迁移 RFC（`work_unit/evidence/claim/human_answer`）；④ `gate/` 启发式逐条抄成规则清单，不改语义（已交付：`docs/M0-rules-inventory.md`，46 条；自查 `python docs/m0-inventory-check.py --self`）。**验收：`docs/replay-baseline.md` 给出候选规则的命中数与人工核对真阳率；没有这份数不许进 M2。** 进度：M0 未完成——四项里只交付了 ④，卡在 ①②，两者都等那份真实转录（取法见 `docs/BOOTSTRAP.md` §5）。
 - **M1 零接线安装**：单文件可执行 + `npx kvba@latest` 写一个 git hook（post-commit 记账 / pre-push 出报告），无 API Key 也能跑。桌面版若继续发：签名 + 公证 + 自动更新三项补齐。**验收：两台干净机器从下载到看到首份报告 ≤3 分钟、编辑配置文件 0 次；做不到就砍安装包，只发 CLI + GitHub Action。**
 - **M2 目录 v1（20 条规则）+ 报告**：**验收：对复盘 §四 已知形态回放命中 ≥70%、人工抽 20 条误报 ≤20%、报告中指向不存在文件或错误行数的断言 = 0**（对拍脚本须带负向对照，证明它自己能失败）。
 - **M3 复述队列**（"学习模式"的大众说法）：每周从账本挑 N 条"你没确认过的 AI 变更"让你一句话复述，答错/跳过则保留加权。**验收：连续 4 周完成率 ≥30%，且完成率与跳过率负相关。**
