@@ -42,4 +42,6 @@ docs/RFC-0004-mass-market-ledger.md    founding strategy: 定位、四层形态�
 docs/BOOTSTRAP.md                     steps that require a human terminal (name checks, remote repo, code signing)
 docs/M0-rules-inventory.md            M0·④ 交付物：旧仓 46 条确定性启发式逐条抄成数据（含"哪些缺陷形态今天根本没有检测器"的初判）
 docs/m0-inventory-check.py            上面那份清单的自查（漏抄 / 未分类 / 表格塌陷），`--self` 三段负向对照；规则迁完就该删
+docs/LEGACY-MANIFEST.md               什么从前身仓库导进了 `docs/legacy/`、什么有意留在原仓、以及怎么复验
+docs/legacy/                          前身仓库的只读档案（复盘、交接报告、RFC-0003、原始规格、旧 README、对拍脚本）——**只读，改了就破坏档案**
 ```
