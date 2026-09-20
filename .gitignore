@@ -1,0 +1,21 @@
+# 构建产物
+/target
+**/*.rs.bk
+/node_modules
+/dist
+*.log
+
+# 本工具往用户项目里写的目录（产品自身开发时也不要把它提交进来）
+/.readback
+
+# M0 语料：真实转录含私有内容，永不入库；只提交脱敏后的派生数据
+/m0/corpus
+*.jsonl
+
+# 本地 agent 工具链与状态（非产品代码）
+/.opencode/skills/
+/.opencode/node_modules/
+
+# 操作系统垃圾文件
+Thumbs.db
+.DS_Store

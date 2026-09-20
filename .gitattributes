@@ -1,0 +1,13 @@
+# 换行符契约属于仓库，不属于某个人的本地配置（core.autocrlf 因机器而异，会原样复发事故）
+* text=auto eol=lf
+
+# Windows 批处理必须 CRLF：cmd.exe 按字节流解析，LF + 非 ASCII 注释会让指令边界错位
+*.cmd text eol=crlf
+*.bat text eol=crlf
+
+# 二进制：不要归一化，不要 diff
+*.png binary
+*.ico binary
+*.icns binary
+*.woff2 binary
+*.pdf binary
