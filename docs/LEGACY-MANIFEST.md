@@ -5,19 +5,21 @@
 ## 铁规则
 
 1. **`docs/legacy/` 下的文件一律不改。** 要修正内容 → 在旧仓改、提交，再重新导一次并重算下面的哈希。就地编辑副本会把"档案"变成"另一份维护中的文档"——旧仓复盘 §四 第 21 行记的就是这么来的（README 改版删小节，把生效路径变成了孤岛）。
-2. **副本必须字节一致。** 重导后用第 4 节的命令复验；哈希对不上就是有人在两边各改了一半。
+2. **副本必须与旧仓提交逐字节同一（以 git blob 对象号为准）。** 复验命令见第 4 节；对不上就是有人在两边各改了一半。不要拿工作区字节的 sha256 当判据——那会随检出机器的 `core.autocrlf` 漂。
 3. 旧仓转只读遗产，不再往它提新特性；但**它的工作区不能被清空**（下表"留在旧仓"栏），因为删掉就等于毁掉唯一的可编译参考实现，而这个仓库还有别人的提交。
 
-## 已导入（sha256 前 16 位，2026-09-20）
+## 已导入（blob 对象号，2026-09-20）
 
-| 文件 | 字节 | sha256 | 为什么值得留 |
+| 文件 | 字节 | git blob（旧仓 = 新仓） | 为什么值得留 |
 |---|---|---|---|
-| `复盘与工程约定.md` | 59896 | `274aaeffa1a925b7` | **最值钱的单一文件**：§六 铁律、§四 38 类真实缺陷形态（目录 v1 的种子语料）、§八 未闭合清单。§H 那张缺口表就是从它推的 |
-| `HANDOVER.md` | 12912 | `47fb18cc99016a72` | 交接视角的现状与"已知问题及解决方案"，含 LLM 稿件 2/5 含假事实的那次实测记录 |
-| `rfcs/RFC-0003-workunit-cognition-ledger.md` | 6807 | `690d4041128e66ba` | 数据模型与回合边界的原始决策；RFC-0004 §4 继承的就是它，引用要能在本地闭合 |
-| `InitPrompt.md` | 29368 | `1278d81a5a2ae413` | 原始规格：问题定义、七层门控的设计动机、里程碑与待决事项。解释"为什么长这样" |
-| `README.md` | 19400 | `77c16ab9a3e62bbf` | 四路接线的**成本证据**（RFC-0004 §2.3 首行引用 `README.md:80-182`）：没有它，那些"首卡 5+ 步"的结论只剩作者说法 |
-| `doc-parity.py` | 6447 | `c526e78f2f542d6e` | 防丢事实对拍器（带 `--self` 负向对照）。§H 认定"文档断言与实现对拍"是目录 v1 该收的第一批规则之一——工具形态已经在它身上验证过 |
+| `复盘与工程约定.md` | 59896 | `a1cd04d750a61cd1` | **最值钱的单一文件**：§六 铁律、§四 38 类真实缺陷形态（目录 v1 的种子语料）、§八 未闭合清单。§H 那张缺口表就是从它推的 |
+| `HANDOVER.md` | 12912 | `b08cc9ebcc8258f8` | 交接视角的现状与"已知问题及解决方案"，含 LLM 稿件 2/5 含假事实的那次实测记录 |
+| `rfcs/RFC-0003-workunit-cognition-ledger.md` | 6807 | `77f19d76a6901380` | 数据模型与回合边界的原始决策；RFC-0004 §4 继承的就是它，引用要能在本地闭合 |
+| `InitPrompt.md` | 29368 | `3973b172d9e5a8fb` | 原始规格：问题定义、七层门控的设计动机、里程碑与待决事项。解释"为什么长这样" |
+| `README.md` | 19400 | `17695a5978ab5b57` | 四路接线的**成本证据**（RFC-0004 §2.3 首行引用 `README.md:80-182`）：没有它，那些"首卡 5+ 步"的结论只剩作者说法 |
+| `doc-parity.py` | 6447 | `8d7bee8f465a55f5` | 防丢事实对拍器（带 `--self` 负向对照）。§H 认定"文档断言与实现对拍"是目录 v1 该收的第一批规则之一——工具形态已经在它身上验证过 |
+
+口径为什么是 blob 而不是文件 sha256：这台机器 `core.autocrlf=true`，复制出来的工作区字节带 CRLF，而本仓 `.gitattributes` 强制 `eol=lf` ——**字节哈希会随谁在哪台机器上检出而变**，正应了旧仓复盘 §四 第 15 行那条教训（"换行符契约属于仓库，要靠 `.gitattributes` 固定"）。blob 对象号两边相同即内容同一（已逐份验过 6/6 全 SAME）。
 
 导入后新仓的自查与清单类文件仍留在原位：`docs/M0-rules-inventory.md`、`docs/m0-inventory-check.py`、`docs/RFC-0004-mass-market-ledger.md` 是**本仓的工作物**，不是档案。
 
@@ -31,20 +33,22 @@
 | `.github/workflows/` | 新仓现在没有可跑的东西；先建工作流就是造恒绿（`BOOTSTRAP.md` §6） | 第一个 `cargo init --lib` 提交时，与 fmt/clippy/test 三件套同批 |
 | `%APPDATA%\dev.kvba.app\` 运行数据 | 不在仓库里，且是唯一记录着真实历史事件与决策日志的地方（RFC-0004 §2.3 的两条计数就来自它） | 永不搬迁；M0 取样只读不写 |
 
-## 复验（在 `D:\000GH more` 下跑）
+## 复验（在 `D:\000GH more\readback` 下跑）
 
 ```bash
-python - <<'PY'
-import hashlib, pathlib
-pairs = [("kvba/README.md","readback/docs/legacy/README.md"),
-         ("kvba/docs/HANDOVER.md","readback/docs/legacy/HANDOVER.md"),
-         ("kvba/docs/复盘与工程约定.md","readback/docs/legacy/复盘与工程约定.md"),
-         ("kvba/docs/InitPrompt.md","readback/docs/legacy/InitPrompt.md"),
-         ("kvba/docs/doc-parity.py","readback/docs/legacy/doc-parity.py"),
-         ("kvba/docs/rfcs/RFC-0003-workunit-cognition-ledger.md","readback/docs/legacy/rfcs/RFC-0003-workunit-cognition-ledger.md")]
-h=lambda p: hashlib.sha256(pathlib.Path(p).read_bytes()).hexdigest()
-for a,b in pairs: print("OK " if h(a)==h(b) else "DIFF", b)
-PY
+while read -r old new; do
+  a=$(git -C ../kvba rev-parse "HEAD:$old"); b=$(git rev-parse "HEAD:$new")
+  [ "$a" = "$b" ] && echo "SAME $new" || echo "DIFF $new  old=$a new=$b"
+done <<'L'
+README.md docs/legacy/README.md
+docs/HANDOVER.md docs/legacy/HANDOVER.md
+docs/复盘与工程约定.md docs/legacy/复盘与工程约定.md
+docs/InitPrompt.md docs/legacy/InitPrompt.md
+docs/doc-parity.py docs/legacy/doc-parity.py
+docs/rfcs/RFC-0003-workunit-cognition-ledger.md docs/legacy/rfcs/RFC-0003-workunit-cognition-ledger.md
+L
 ```
+
+比对的是**提交对象**而不是工作区字节，所以不受各人 `core.autocrlf` 影响。判据：6 行全 `SAME`（2026-09-20 实测即如此）；任一行 `DIFF` 就说明有人在两边各改了一半 —— 按第 1 节铁规则处理：旧仓改定、重新导、更新本表。
 
 `legacy/doc-parity.py` 仍要在**旧仓根目录**跑（它按 `docs/HANDOVER.md` 与 `README.md` 的相对路径找文件）；在新仓直接运行会因为找不到 HANDOVER 而报一堆假缺失——这正是"档案不改、路径不假装"的理由。
