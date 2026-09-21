@@ -9,7 +9,7 @@
 |---|---|---|
 | 新仓 | 提交数与文件数**由命令自证，本文不写死**（写下绝对数的那一刻就开始过期，2026-09-21 就错过一次）：远程 `origin` = `Escap1ng/readback`（**私有**），工作树干净 | `git rev-list --count HEAD`；`git ls-files \| wc -l`；`git remote -v`；`git status --porcelain` → 空；私有性：`curl -o /dev/null -w '%{http_code}' https://api.github.com/repos/Escap1ng/readback` → 404（带 token 读则 `PRIVATE`） |
 | M0·④ 已交付，自查器**不需要旧仓也能跑** | 46 条规则 + 自述数字已纳进断言 | `python docs/m0-inventory-check.py` → 46 条 / exit 0；`--self` → 4 段咬住并明说跳过哪段（带 `--src-if-present` 则 5 段） |
-| M0·①②③ | ① 可开工（主料改成自造快照，见 T3）；② 仍等真实转录；③ 未启动 | RFC-0004 §6 的 M0 条；`BOOTSTRAP.md` §5（本机 `$HOME` 无 `.claude`） |
+| M0·①②③ | ① **半程**（机器数已出，欠 20 条人工判定）；② 仍等真实转录；③ **已交付待评**（RFC-0005 + 可执行 schema 检查） | ①：`python m0/replay.py --audit-check`；②：`BOOTSTRAP.md` §5（本机 `$HOME` 无 `.claude`）；③：`python m0/schema-check.py --mutation` |
 | 档案同一性 | 6/6 `OK`——**单仓自证，不碰旧仓不碰网** | `LEGACY-MANIFEST.md`「复验 · 第一级」那段循环（阴性对照：把任一期望值改错一位必须报 `DRIFT`） |
 | **旧仓可搬运性（本轮新发现，最紧）** | 导入锚点 `ddcbf4f` **不在**远程 `main` 上；本地领先 5 条，且远程无独有提交（纯 fast-forward） | `git -C ../kvba ls-remote origin refs/heads/main` → `ed8f700`；`git -C ../kvba merge-base --is-ancestor ddcbf4f ed8f700` → 非 0；`git -C ../kvba rev-list --count @{u}..HEAD` → 5，`HEAD..@{u}` → 0 |
 
@@ -51,10 +51,13 @@
 - **本轮量出来的三件事**（是数出来的，不是猜的）：C-02「改源未改测」最吵，91 次发声里 81% 落在没登记的地方，直接进目录就是噪音源；D-03「新增外部调用」precision 29%，输给的反例正是"同类但已带错误处理"的写法，它必须与 C-04 合流；反例只有 5 类，所以 79% 偏乐观，目录 v1 要扩反例。
 - **语料不入库**：`m0/corpus/` 被 `.gitignore` 挡住，只提交生成器与派生报告。前身仓 47 commits 仍是可选加料，没接。
 
-### T4 · M0·③ SQLite 迁移 RFC（agent，可与 T2/T3 并行）
+### T4 · M0·③ SQLite 迁移 RFC（agent，可与 T2/T3 并行）—— **已交付（2026-09-21，状态 Proposed 待人评）**
 
-- 表：`work_unit / evidence / claim / human_answer`；补 §2.3 点名的五个缺失字段（分支、token 与成本、回合起始基线、unit 间关联、人工结论回指）。
-- 判据：带 `schemaVersion`（§10 末行要求），并写清旧仓扁平 JSON 的迁入口径与裁剪留痕（§H 最后一行那条规则）。
+- **交付物**：`m0/schema.sql`（DDL 唯一正本，RFC-0005 里不复制它）+ `m0/schema-check.py`（可执行验证）+ `m0/legacy-sample.json`（自造迁移样本，字段名取自旧仓真实结构体）+ `docs/RFC-0005-sqlite-ledger.md`。
+- **判据逐条对照**：§2.3 五个缺口 → 分支/`tokens_*`+`cost_usd_milli`/`base_commit`+`head_commit`+`baseline_ok`/`prev_unit_id`+`unit_link`/`human_answer` 全部落列；`schemaVersion` 落 `meta`（§10 末行）；裁剪留痕落 `pruning_log`（§H 最后一行）。三条硬口径（路径摘要做项目身份、`"exit 0"` 文本只算 `parsed`、cap = 最近 N 条 + 所有仍被引用的条）都各有一条用例守着。
+- **复验**：`python m0/schema-check.py` → 51 项 / 未过 0；`--self` → 7 段负向对照全咬住；`--mutation` → 33/33 条 `CHECK` 摘掉后有用例变红。三段全 exit 0，且**不需要旧仓、不需要网络**。
+- **本轮量出来的两件事**（都是脚本报的，不是我推的）：`--mutation` 首跑只有 11/34 条 CHECK 摘掉会红，另 23 条摘了没人报——补齐 22 条用例后剩最后一条被证明冗余（`schema_version >= 1` 蕴含自 `min_reader` 那两条），删掉而不是留成豁免；`unit_link` 置信度那条用例其实一直是被**外键**拒的（引用了不存在的 unit），CHECK 从未真被验过。
+- **仍欠（不阻塞 M0）**：rusqlite 打包版本 ≥3.37、连接处统一开 `PRAGMA foreign_keys`、`CASCADE`/`SET NULL` 删除路径的用例、真实运行数据的迁移（只验过自造样本）。这四项在 RFC-0005 §7 列成"不得当事实写进代码"的清单，M1 入口时逐项收。
 
 ### T5 · 让 §H 那张表变成能引用的东西（agent，依赖 T3）
 

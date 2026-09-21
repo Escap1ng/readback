@@ -1,0 +1,125 @@
+{
+  "_note": "自造的旧仓扁平 JSON 样本（字段名取自前身仓 workunit/mod.rs 与 insight/mod.rs 的真实结构体）。只用来单侧验证迁移路径，不含任何真实项目数据。",
+  "work_units.json": [
+    {
+      "work_unit": {
+        "id": "wu-0000",
+        "project_id": "p-alpha",
+        "session_id": "s-0",
+        "goal": "最早的一次改动，没有任何断言指向它",
+        "mode": "agent",
+        "start_at": 1735680000,
+        "end_at": 1735680300,
+        "events": ["e0"],
+        "change_set": {
+          "base_ref": "000aaaa",
+          "head_ref": "000bbbb",
+          "files": [{"path": "src/old.rs", "additions": 4, "deletions": 1, "hunks": 1}],
+          "scope": "batch",
+          "collection_error": null
+        },
+        "tests": []
+      },
+      "project_path": "C:/somewhere/alpha",
+      "boundary_event_id": "e0"
+    },
+    {
+      "work_unit": {
+        "id": "wu-0001",
+        "project_id": "p-alpha",
+        "session_id": "s-1",
+        "goal": "给报告加严重度色板",
+        "mode": "agent",
+        "start_at": 1735690000,
+        "end_at": 1735690600,
+        "events": ["e1", "e2"],
+        "change_set": {
+          "base_ref": "a1b2c3d",
+          "head_ref": "d4e5f6a",
+          "files": [
+            {"path": "src/report.css", "additions": 24, "deletions": 3, "hunks": 2},
+            {"path": "src/report.rs", "additions": 11, "deletions": 0, "hunks": 1}
+          ],
+          "scope": "batch",
+          "collection_error": null
+        },
+        "tests": [
+          {"name": "cargo test -q", "status": "Passed", "evidence": "exit 0"}
+        ]
+      },
+      "project_path": "C:/somewhere/alpha",
+      "boundary_event_id": "e2"
+    },
+    {
+      "work_unit": {
+        "id": "wu-0002",
+        "project_id": "p-alpha",
+        "session_id": "s-1",
+        "goal": "修 CI 里挡住的断言消息",
+        "mode": "agent",
+        "start_at": 1735691000,
+        "end_at": 1735691400,
+        "events": ["e3"],
+        "change_set": {
+          "base_ref": null,
+          "head_ref": null,
+          "files": [{"path": ".github/workflows/ci.yml", "additions": 2, "deletions": 2, "hunks": 1}],
+          "scope": "batch",
+          "collection_error": "no baseline captured"
+        },
+        "tests": []
+      },
+      "project_path": "C:/somewhere/alpha",
+      "boundary_event_id": "e3"
+    },
+    {
+      "work_unit": {
+        "id": "wu-0003",
+        "project_id": "p-beta",
+        "session_id": "s-2",
+        "goal": "删掉已下线宿主那一路",
+        "mode": "human",
+        "start_at": 1735692000,
+        "end_at": 1735692300,
+        "events": ["e4"],
+        "change_set": {
+          "base_ref": "ffee001",
+          "head_ref": "ffee002",
+          "files": [{"path": "adapters/trae.ts", "additions": 0, "deletions": 140, "hunks": 1}],
+          "scope": "batch",
+          "collection_error": null
+        },
+        "tests": [{"name": "npm test", "status": "Failed", "evidence": "exit 1"}]
+      },
+      "project_path": "D:/elsewhere/beta",
+      "boundary_event_id": "e4"
+    }
+  ],
+  "insights.json": [
+    {
+      "id": "in-0001",
+      "work_unit_id": "wu-0001",
+      "kind": "TestGap",
+      "conclusion": "改了源码但同批没有任何测试变更",
+      "evidence": [
+        {"kind": "file", "reference": "src/report.rs:11", "excerpt": "pub fn severity(v: &str) -> &'static str {"},
+        {"kind": "file", "reference": "src/does-not-exist.rs:1", "excerpt": "幽灵证据"}
+      ],
+      "importance": "high",
+      "suggested_action": "补一条回归",
+      "risk_level": "P1",
+      "confidence": 0.9
+    },
+    {
+      "id": "in-0002",
+      "work_unit_id": "wu-0003",
+      "kind": "Risk",
+      "conclusion": "一次删掉 140 行且测试失败",
+      "evidence": [{"kind": "test", "reference": "npm test", "excerpt": "exit 1"}],
+      "importance": "high",
+      "suggested_action": "确认没有别处在 import 它",
+      "risk_level": "P0",
+      "confidence": 0.95
+    }
+  ]
+}
