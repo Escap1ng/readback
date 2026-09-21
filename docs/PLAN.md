@@ -7,7 +7,7 @@
 
 | 事实 | 数值 | 怎么复验 |
 |---|---|---|
-| 新仓 | 4 commits / 14 个跟踪文件（本文尚未提交，提交后 15）/ 无远程 / 除本文外无未提交改动 | `git rev-list --count HEAD`；`git ls-files \| wc -l`；`git remote -v` → 空；`git status --porcelain` → 只有 `?? docs/PLAN.md` 一行 |
+| 新仓 | 5 commits / 16 个跟踪文件 / 远程 `origin` = `Escap1ng/readback`（**私有**）/ 工作树干净 | `git rev-list --count HEAD`；`git ls-files \| wc -l`；`git remote -v`；`git status --porcelain` → 空；私有性：`curl -o /dev/null -w '%{http_code}' https://api.github.com/repos/Escap1ng/readback` → 404（带 token 读则 `PRIVATE`） |
 | M0·④ 已交付且自查真能红 | 46 条规则 | `python docs/m0-inventory-check.py` → 46 条 / exit 0；`--self` → 三段都咬住 |
 | M0·①②③ | 未启动；①② 卡在同一份真实转录 | RFC-0004 §6、`BOOTSTRAP.md` §5（本机 `$HOME` 无 `.claude`） |
 | 档案同一性 | 6/6 SAME（两边 blob 对象号相等） | `LEGACY-MANIFEST.md` §4 那段 `while read` 循环 |
@@ -32,8 +32,8 @@
 
 - **旧仓那 5 条**（含锚点 `ddcbf4f`，含 RFC-0004 §11:147 一直挂着的那条 clippy 修复 `1b6a2c6`）：远程无独有提交，是纯 fast-forward。命令与判据已写成 `BOOTSTRAP.md` §0（2026-09-21）——**待你跑**。
 - **名字占用核验（`BOOTSTRAP.md` §1）**：2026-09-21 已做完本机做得到的部分并写回文档——npm 裸名被占（航空通话转写，不同域）、crates.io 被占（Tauri IPC 占名预留）、两个备选名 `blindspot`/`witness` 在两个 registry 上双双被占且 `blindspot` 两处都是同域 → **三个候选全灭**，处置是仓库名与二进制名不变、npm 退 `@readback/cli`、crate 若发用 `readback-cli`。仍**待你跑**的三条：`gh search repos readback`、`gh api /users/readback`（本机被沙箱策略挡住），以及 `npm org ls readback`（决定 `@readback` 这个 scope 到底拿不拿得到）。
-- **建仓（`BOOTSTRAP.md` §2）**：已决定公开。但 §2 原文是"先保持 private，直到 §4 的 license 有结论"，§4 又写"公开之前必须定 license"——**公开与 license 未定直接冲突，必须先解掉**（要么先定 license，要么明确接受"公开但无 LICENSE 文件"，那在法律上等于保留所有权利，且与这个仓库"无证据不出声"的门面不符）。
-- **带回什么**：`git -C ../kvba merge-base --is-ancestor ddcbf4f origin/main` 变成 0；三条 GitHub/npm 核验结论；一句话 license 结论 + `LICENSE` 文件；仓库 URL。
+- **建仓（`BOOTSTRAP.md` §2）已完成（2026-09-21）**：`https://github.com/Escap1ng/readback` 已建、5 个提交已推、远程与本地逐字符相等。license 定 Apache-2.0 并已入库（取证见 §4）。**当前可见性 = 私有**：先按公开建，几分钟后退回，因为"公开"当场暴露三条文档里没预设的连带后果（档案来自仍私有的前身仓 / 本地绝对路径已进仓 / `file:line` 指针外部点不开）。转公开前的五条收口清单在 `BOOTSTRAP.md` §7——那是 M0 之外第一件能推进的事。
+- **带回什么（剩余）**：`git -C ../kvba merge-base --is-ancestor ddcbf4f origin/main` 变成 0；§7 那三条 GitHub/npm 核验结论。URL 与 license 两条已带回。
 
 ### T2 · M0·② 证伪"零接线也带验证证据"（人取样、agent 判读，依赖 T1）
 

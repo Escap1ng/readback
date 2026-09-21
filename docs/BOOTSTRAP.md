@@ -32,7 +32,7 @@ gh api /users/readback --jq .login         # 404 = 该用户名/组织未被占
 | 核验 | 命令 | 结果 | 处置 |
 |---|---|---|---|
 | npm 裸名 | `npm view readback name version description` | **已占**：`0.0.0-alpha.10`，航空管制通话转写（`borisdiakur/readback`，keywords `atc`/`aviation`/`vatsim`/`ivao`） | 不同域，不构成仿作；退作用域名 |
-| crates.io | `cargo search readback --limit 20` | **已占**：`readback = "0.0.0"`，Tauri IPC 库的占名预留（描述原文 "This release reserves the crate name"） | crate 名改 `readback-cli`（实测未占）。§3 不做⑥ 本就不走 `cargo install`，所以这条不挡 M1 |
+| crates.io | `cargo search readback --limit 20` | **已占**：`readback = "0.0.0"`，Tauri IPC 库的占名预留（描述原文 "This release reserves the crate name"） | crate 名改 `readback-cli`（实测未占）。RFC-0004 §3 第⑥条"不要求用户编译任何东西"本就不走 `cargo install`，所以这条不挡 M1 |
 | GitHub 同名项目 | `gh search repos readback --limit 20` | **未做**——本机 auto 模式禁止外部服务查询 | 你来跑。命中同域且活跃的项目 → 停下重议名字 |
 | GitHub 用户名/组织 | `gh api /users/readback --jq .login` | **未做**，同上 | 你来跑。404 = 未被占 |
 | 作用域名能不能拿到 | `npm view @readback/cli version` → 404；`npmjs.com/~readback` → 403 | **未验证**：404 只说明这个包不存在，不说明 `@readback` 这个 scope 拿得到——它取决于 npm 上有没有叫 `readback` 的用户/组织，而那个页面本机 403 | 你登录后跑 `npm org ls readback`。拿不到 scope → 用 `@<你的用户名>/readback`，仓库名与二进制名仍不变 |
@@ -42,13 +42,18 @@ gh api /users/readback --jq .login         # 404 = 该用户名/组织未被占
 ## 2. 建远程仓并推送
 
 ```bash
-gh repo create readback --public --source=. --remote=origin --push
+gh repo create readback --private --source=. --remote=origin --push
+# 已建之后调可见性：
+gh repo edit Escap1ng/readback --visibility private --accept-visibility-change-consequences
 ```
 
 - 证明什么：本仓首次成为可被他人 clone 的东西。
 - 带回什么：仓库 URL。
-- 原文写的是 `--private`「直到第 4 条（license）有结论」；**2026-09-21 license 已定 Apache-2.0（见 §4），故改为公开建仓**。仓名仍用 `readback`：GitHub 仓名在用户命名空间下（`Escap1ng/readback` 实测不存在），不受 npm/crates.io 占用影响——§1 的处置本就是"仓库名与二进制名不变"。
-- 建仓前仍需你跑 §1 那两条被沙箱挡住的核验（`gh search repos readback`、`gh api /users/readback`）；若命中同域且活跃的同名项目，按 §1 停下重议。
+- **结果（2026-09-21）**：`https://github.com/Escap1ng/readback` 已建。远程 `main` 与本地 `a189223` 逐字符相等，5 个提交 / 16 个文件全推上；从公网取回 `LICENSE` 比对 sha256 与本地一致。**当前可见性 = PRIVATE**（认证态读到 `PRIVATE`；匿名访问仓库 API、匿名 raw 取 `docs/legacy/` 里的档案，双双 404）。
+- 中间绕了一下：先按"license 已定（§4）"用 `--public` 建的，几分钟后退回私有。原因是"公开"当场带出三条文档里没预设的连带后果——档案属仍私有的前身仓、本地绝对路径已进仓、`file:line` 指针外部点不开。收口清单见 §7。
+- 仓名仍用 `readback`：GitHub 仓名在用户命名空间下（建仓前实测 `Escap1ng/readback` 不存在），不受 npm/crates.io 占用影响——§1 的处置本就是"仓库名与二进制名不变"。
+- **推送通道**：这台机直连 `github.com:443` 会随机 reset（实测两次：`Recv failure: Connection was reset`、`Failed to connect to github.com:443 after 21056 ms`），改走 `127.0.0.1:33210` 代理一次成功：`git -c http.proxy=http://127.0.0.1:33210 push -u origin main`。**故意用 `-c` 临时参数，没写进 git 配置**——端口会变，别固化。
+- 该在建仓前跑的 §1 两条 GitHub 侧核验被沙箱挡住，**实际未做就建了仓**；转公开前补上（§7 第 4 条）。
 
 ## 3. 签名与公证询价（决定 M1 的形态）
 
@@ -83,3 +88,15 @@ head -c 2000 "$(find "$HOME/.claude/projects" -name '*.jsonl' | head -1)"   # �
 ## 6. 工作流（CI）刻意还没建
 
 没有代码就没有 CI。第一个提交如果是 `.github/workflows/` 而没有可跑的测试，它就恒绿——恒绿的检查器不是证据，是噪音（前一个项目为此写过整节复盘）。等第一个 `cargo init --lib` 的提交落地时，再一次性带上 fmt / clippy `-D warnings` / test 三件套，并且**先证明它能变红**。
+
+## 7. 转公开之前的收口清单
+
+2026-09-21 决定先私有。下面五条清完，才跑 `gh repo edit Escap1ng/readback --visibility public --accept-visibility-change-consequences`。
+
+| # | 待收口的东西 | 为什么挡公开 | 谁做 |
+|---|---|---|---|
+| 1 | `docs/legacy/` 那 6 份档案来自**仍然私有**的前身仓（其 GitHub 私有仓匿名访问 404，2026-09-21 实测） | 公开本仓等于把私有项目的事故集公开：60KB 复盘、InitPrompt 原始规格、HANDOVER、旧 README | **你定**：确认这些可以见公；或移出档案——代价是 `LEGACY-MANIFEST` 的 blob 复验与 RFC-0004 §2.3 的"引用本地闭合"同时失效 |
+| 2 | 本地绝对路径已进仓 5 处：`LEGACY-MANIFEST.md:3`、`:36` 的 `D:\000GH more\…`（本仓工作物，能改）；复盘里 3 处（档案，按 `LEGACY-MANIFEST.md` §1 铁规则不能就地改） | 公开即泄露本机目录结构 | 前两处 agent 改；后三处只能在旧仓改定后重导并更新哈希表 |
+| 3 | `README.md:15` 主张 "Evidence or silence"，但全仓 `file:line` 指向私有旧仓，且导入锚点 `ddcbf4f` 至今不在旧仓远程上（§0） | 外部读者点不开任何一个指针，主张在公开场合当场不成立 | §0 由你跑；README 是否加一句"指针仅作者可核"由你定 |
+| 4 | §1 结果表里三条**未做/未验证**：`gh search repos readback`、`gh api /users/readback`、`npm org ls readback` | §1 的停止判据（同域且活跃的同名项目）还没排除；`@readback/cli` 的 scope 到底拿不拿得到也没落实 | 你跑（本机沙箱禁外部服务查询） |
+| 5 | `docs/PLAN.md` T0 那 4 处文档自述缺陷 | 公开后任何人都能拿这几条对不上数的句子反问，而本仓的门面正是"可证伪" | agent 改 |
