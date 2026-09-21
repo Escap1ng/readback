@@ -1,6 +1,6 @@
 # 遗留资产清单（`docs/legacy/`）
 
-从前身仓库 KVBA v0.2.0 导入的**只读档案**。导入锚点：旧仓 `ddcbf4f`（`main`，本地路径 `D:\000GH more\kvba`）。
+从前身仓库 KVBA v0.2.0 导入的**只读档案**。导入锚点：旧仓 `main` 的 `ddcbf4f`。旧仓在本机的目录位置**不写进本文档**——那是机器状态，不是仓库契约；需要两面对拍时现场确认（见第 4 节第二级）。
 
 ## 铁规则
 
@@ -33,7 +33,33 @@
 | `.github/workflows/` | 新仓现在没有可跑的东西；先建工作流就是造恒绿（`BOOTSTRAP.md` §6） | 第一个 `cargo init --lib` 提交时，与 fmt/clippy/test 三件套同批 |
 | `%APPDATA%\dev.kvba.app\` 运行数据 | 不在仓库里，且是唯一记录着真实历史事件与决策日志的地方（RFC-0004 §2.3 的两条计数就来自它） | 永不搬迁；M0 取样只读不写 |
 
-## 复验（在 `D:\000GH more\readback` 下跑）
+## 复验（分两级；第一级不需要旧仓）
+
+### 第一级 · 本仓自证（默认，随时可跑）
+
+上面那张表的 6 个 blob 对象号就是契约。只要新仓侧等于它，档案就没被就地改过——**这一级不碰旧仓、不碰网络**，在任何一台 clone 上都能跑：
+
+```bash
+while read -r new want; do
+  got=$(git rev-parse "HEAD:$new")
+  case "$got" in "$want"*) echo "OK   $new";; *) echo "DRIFT $new  文中 $want  实为 ${got:0:16}";; esac
+done <<'L'
+docs/legacy/README.md 17695a5978ab5b57
+docs/legacy/HANDOVER.md b08cc9ebcc8258f8
+docs/legacy/复盘与工程约定.md a1cd04d750a61cd1
+docs/legacy/InitPrompt.md 3973b172d9e5a8fb
+docs/legacy/doc-parity.py 8d7bee8f465a55f5
+docs/legacy/rfcs/RFC-0003-workunit-cognition-ledger.md 77f19d76a6901380
+L
+```
+
+判据：**6 行全 `OK`**。任一行 `DRIFT` = 有人在两边之间又改了一次，或本表忘了更新——按第 1 节铁规则处理，别顺手"改回看起来对的样子"。
+
+为什么这一级要设成默认：旧仓那个锚点提交 `ddcbf4f` **至今不在任何远程上**（2026-09-21 实测；推它这一步写在 `BOOTSTRAP.md` §0）。把复验绑在旧仓上，等于把"档案没被改过"这件事绑在一台机器上——换台机器就没人验得了。
+
+### 第二级 · 两边对拍（只在旧仓在位时做）
+
+它证明的是另一件事：**新仓这份副本与旧仓那次会议上的对象仍是同一个**（重新导入、或怀疑两边各改了一半时才有必要）。`../kvba` 只是本机默认位置，不是契约：
 
 ```bash
 while read -r old new; do
@@ -49,6 +75,6 @@ docs/rfcs/RFC-0003-workunit-cognition-ledger.md docs/legacy/rfcs/RFC-0003-workun
 L
 ```
 
-比对的是**提交对象**而不是工作区字节，所以不受各人 `core.autocrlf` 影响。判据：6 行全 `SAME`（2026-09-20 实测即如此）；任一行 `DIFF` 就说明有人在两边各改了一半 —— 按第 1 节铁规则处理：旧仓改定、重新导、更新本表。
+判据：6 行全 `SAME`。两级各自实测过：第一级 2026-09-21 全 `OK`；第二级 2026-09-20、2026-09-21 各跑一次均全 `SAME`。比对的是**提交对象**而不是工作区字节，所以不受各人 `core.autocrlf` 影响。
 
-`legacy/doc-parity.py` 仍要在**旧仓根目录**跑（它按 `docs/HANDOVER.md` 与 `README.md` 的相对路径找文件）；在新仓直接运行会因为找不到 HANDOVER 而报一堆假缺失——这正是"档案不改、路径不假装"的理由。
+`legacy/doc-parity.py` 是旧仓的工具，要在**旧仓根目录**跑（它按 `docs/HANDOVER.md` 与 `README.md` 的相对路径找文件）；在新仓直接运行会因为找不到 HANDOVER 而报一堆假缺失——这正是"档案不改、路径不假装"的理由，也是它作为档案留在这里、而不被接进本仓自查的原因。

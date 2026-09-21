@@ -13,7 +13,7 @@
 
 | # | 现在 | 目标 | 为什么 |
 |---|---|---|---|
-| R1 | 实时门控 + 胶囊弹卡 | 回合之后交产物：`.kvba/review.md`、PR 摘要段、commit trailer、每日 digest | 大众不接受工作流被打断；产物可分享才自带传播 |
+| R1 | 实时门控 + 胶囊弹卡 | 回合之后交产物：`.readback/report.md`、PR 摘要段、commit trailer、每日 digest | 大众不接受工作流被打断；产物可分享才自带传播 |
 | R2 | LLM 判断什么算问题 | 确定性「缺陷形态目录」出判断，LLM 只写措辞 | 实测 5 张真 LLM 稿有 2 张含可证伪的错误事实；带证据的确定性结论 0 错 |
 | R3 | 不接钩子就不开工 | 只用 git + 本地记录即可出报告，钩子降为实时增强 | 今天首卡要 5+ 步手工配置、重启会话、甚至自己 `cargo build` |
 
@@ -50,7 +50,7 @@
 
 | 类 | 谁 | 动机 | 消费口 |
 |---|---|---|---|
-| A | 一人开发者 / 接单者 | "客户问我这行干什么的，我 30 秒能答" | 每日报告 + `.kvba/review.md` |
+| A | 一人开发者 / 接单者 | "客户问我这行干什么的，我 30 秒能答" | 每日报告 + `.readback/report.md` |
 | B | 3–20 人团队 lead | "无验证证据的改动进不了 main" | PR 摘要段 + check |
 | C | 接手者 / 新人 | 读账本比读 diff 快 | A 的副产物 |
 
@@ -65,7 +65,7 @@ L2 账本   复用 WorkUnit/ChangeSet/TestResult/Insight/Evidence
           替换 扁平 JSON → SQLite(补分支/成本/回合基线/unit 链/人工结论回指)
 L3 判断   改造 gate/ 启发式 + insight::is_*_file → 缺陷形态目录(规则即数据)
           复用 复盘 §四 38 类真实形态作为目录种子
-L4 产物   新增 kvba report --md / PR 段 / commit trailer / 每日 digest
+L4 产物   新增 readback report --md / PR 段 / commit trailer / 每日 digest
           降级 胶囊、托盘、系统通知 = L4 的两个订阅者
 ```
 
@@ -73,8 +73,8 @@ L4 产物   新增 kvba report --md / PR 段 / commit trailer / 每日 digest
 
 ## 6. 里程碑（顺序不可打乱，验收均可证伪）
 
-- **M0 素材与地基**（先取数，不写新功能）：① 建回放语料（本仓库 47 commits 的 numstat/作者/消息 + 可得的真实 agent 记录，不足则自造 20 个含已知缺陷的快照仓库）；② 证伪关键未知——转录的 `tool_result` 是否携带可解析退出码/`is_error`（判据：≥90% 的 shell 类调用能取到 0/非 0 → 则「零接线也带验证证据」成立；取不到则 L1 退 git-only，形态不变、M2 少一类规则）；③ SQLite 迁移 RFC（`work_unit/evidence/claim/human_answer`）；④ `gate/` 启发式逐条抄成规则清单，不改语义（已交付：`docs/M0-rules-inventory.md`，46 条；自查 `python docs/m0-inventory-check.py --self`）。**验收：`docs/replay-baseline.md` 给出候选规则的命中数与人工核对真阳率；没有这份数不许进 M2。** 进度：M0 未完成——四项里只交付了 ④，卡在 ①②，两者都等那份真实转录（取法见 `docs/BOOTSTRAP.md` §5）。
-- **M1 零接线安装**：单文件可执行 + `npx kvba@latest` 写一个 git hook（post-commit 记账 / pre-push 出报告），无 API Key 也能跑。桌面版若继续发：签名 + 公证 + 自动更新三项补齐。**验收：两台干净机器从下载到看到首份报告 ≤3 分钟、编辑配置文件 0 次；做不到就砍安装包，只发 CLI + GitHub Action。**
+- **M0 素材与地基**（先取数，不写新功能）：① 建回放语料（**主料**：自造 20 个含已知缺陷的快照仓库 + 本仓自己的 git 历史；**可选加料**：前身仓 47 commits 的 numstat/作者/消息，以及可得的真实 agent 记录。**前身仓历史不能当验收前提**：那 47 条连同导入锚点 `ddcbf4f` 至今只存在于一台机器上（2026-09-21 实测），把判据绑在它上面等于让 M0 无法被任何人复核）；② 证伪关键未知——转录的 `tool_result` 是否携带可解析退出码/`is_error`（判据：≥90% 的 shell 类调用能取到 0/非 0 → 则「零接线也带验证证据」成立；取不到则 L1 退 git-only，形态不变、M2 少一类规则）；③ SQLite 迁移 RFC（`work_unit/evidence/claim/human_answer`）；④ `gate/` 启发式逐条抄成规则清单，不改语义（已交付：`docs/M0-rules-inventory.md`，46 条；自查 `python docs/m0-inventory-check.py --self`）。**验收：`docs/replay-baseline.md` 给出候选规则的命中数与人工核对真阳率；没有这份数不许进 M2。** 进度（2026-09-21 改）：四项里只交付了 ④。**① 不再等真实转录**——主料换成自造快照仓库与本仓自己的 git 历史，本仓就能开工；只有 ② 仍等那份转录（取法见 `docs/BOOTSTRAP.md` §5），它是唯一卡住 L1 形态的未知。
+- **M1 零接线安装**：单文件可执行 + `npx @readback/cli@latest` 写一个 git hook（post-commit 记账 / pre-push 出报告），无 API Key 也能跑。桌面版若继续发：签名 + 公证 + 自动更新三项补齐。**验收：两台干净机器从下载到看到首份报告 ≤3 分钟、编辑配置文件 0 次；做不到就砍安装包，只发 CLI + GitHub Action。**
 - **M2 目录 v1（20 条规则）+ 报告**：**验收：对复盘 §四 已知形态回放命中 ≥70%、人工抽 20 条误报 ≤20%、报告中指向不存在文件或错误行数的断言 = 0**（对拍脚本须带负向对照，证明它自己能失败）。
 - **M3 复述队列**（"学习模式"的大众说法）：每周从账本挑 N 条"你没确认过的 AI 变更"让你一句话复述，答错/跳过则保留加权。**验收：连续 4 周完成率 ≥30%，且完成率与跳过率负相关。**
 - **M4 团队治理（付费面）**：政策即数据（如「无测试证据的 Agent 变更不得进 main」），顺带闭合至今悬空的 `RiskLevel::P0` 定义。
@@ -141,6 +141,7 @@ L4 产物   新增 kvba report --md / PR 段 / commit trailer / 每日 digest
 - 迁：`insight/`+`workunit/` 数据结构与其 109 项单测、`gate/` 抄出的规则清单（M0·④）、`kvba.event.v1` 事件契约、4 路适配器（降为可选增强）、`crypto/` 的本机密钥方案。
 - 不迁（旧仓留作参考实现）：G1–G7 决策树、Tauri 桌面壳与胶囊四态、Vue 三面板、扁平 JSON 持久化、"每日 80 格"预算模型。
 - 栈：Rust 单二进制（core + CLI + git hook），npm 包只做平台二进制的下载器；桌面壳等 M2 有产物、且有人追问"有没有界面"时再挂回来。理由：§2.3 实测今天"除默认 GUI 主程序外无第二个 bin"，而无头 CLI 才是大众装机路径上唯一不需要解释的东西。
+- **解耦规则（2026-09-21 定）：本仓的自查与验收一律不得以"能访问旧仓"为前提。** 旧仓在本机的目录位置、它未推送的提交、它的工作区，都不许被本仓任何脚本或判据依赖；旧仓只作为**取证锚点**被引用（`file:line` 与 blob 对象号），而结论需要的数字要抄进本仓，让引用能单侧闭合。已落地的两处：`docs/m0-inventory-check.py` 默认不读旧仓、只在显式 `--src` 时多查一类；`docs/LEGACY-MANIFEST.md` 的复验拆成两级，第一级单仓可跑、且带阴性对照。
 - 两仓库关系：旧仓转只读遗产，新仓 README 首段直接搬 §11 的证据分级表，写明"哪些结论是实测、哪些仍未验证"，避免新人重踩；账本一律带 `schemaVersion`。文档类资产已按只读档案导入 `docs/legacy/`（6 份，与旧仓 `ddcbf4f` 字节一致，哈希与"有意不迁"的理由见 `docs/LEGACY-MANIFEST.md`）；代码类资产**不迁**——单独抠进新仓就是一堆读得懂但跑不动的文件，等 M1 建 crate 时连 109 项测试一起落地。
 
 ## 11. 证据分级（结论不得越级表述）
@@ -149,6 +150,6 @@ L4 产物   新增 kvba report --md / PR 段 / commit trailer / 每日 digest
 - **静态审计（读码定位，含行号）**：四路接线成本、账本缺失字段、`work_units_list` 前端未调用、`.kvba/next-prompt.md` 已在写、watcher 只读 `tool_use`。
 - **未验证，须由 M0 证伪**：`tool_result` 是否携带可解析退出码；38 类形态能否 ≥70% 回放命中；"报告比卡片留存更好"这一核心假设本身。
 
-下一步（纯文档/取证，可先做）：采 M0·② 那份转录；把 `gate/` 启发式与复盘 §四 38 类抄成目录 v1 候选表；先清 main 上的 5 个未推送提交与最后一次红 CI（`clippy::err_expect` 已本地修，未推）否则 M0 的回放没有可跑的矩阵。
+**下一步（2026-09-21 更新）**：`gate/` 启发式已抄成 46 条（`docs/M0-rules-inventory.md`，即 M0·④）。剩两件纯取证的事，都不必访问旧仓就能开工：① 采 M0·② 那份转录（`BOOTSTRAP.md` §5）；② 把旧仓 `main` 上那 5 个未推送提交推掉（`BOOTSTRAP.md` §0）。第 ② 件今天复验仍在原地——而且**导入锚点 `ddcbf4f` 就在这 5 条里**，所以它挡的不是"回放矩阵跑不起来"（原文那么写，是因为当时 M0·① 还绑在旧仓历史上），挡的是本仓全部 `file:line` 指针对外部读者的可核性。M0·① 已改口径，不再等这两件。
 
 **执行约束**：本机无 `link.exe` / Windows SDK 库 → `cargo test`、`cargo clippy` 只能在 CI 验（`cargo fmt` 与 `rustc --emit=metadata` 本机可跑）。所有编译期验收按 CI 排期写，别把本地"跑不动"当成"没问题"。

@@ -41,6 +41,7 @@ This repo inherits from a private predecessor (KVBA v0.2.0), kept as a read-only
 docs/RFC-0004-mass-market-ledger.md    founding strategy: 定位、四层形态、里程碑 M0–M4、旧代码处置
 docs/BOOTSTRAP.md                     steps that require a human terminal (name checks, remote repo, code signing)
 docs/PLAN.md                          执行计划与 TODO（T0–T6 泳道，每行带复验命令）；转公开前的收口清单在 BOOTSTRAP §7
+docs/HANDOFF.md                       任务交接：换会话/换机器怎么冷启动、本轮改了什么、四个已踩过的坑
 docs/M0-rules-inventory.md            M0·④ 交付物：旧仓 46 条确定性启发式逐条抄成数据（含"哪些缺陷形态今天根本没有检测器"的初判）
 docs/m0-inventory-check.py            上面那份清单的自查（漏抄 / 未分类 / 表格塌陷），`--self` 三段负向对照；规则迁完就该删
 docs/LEGACY-MANIFEST.md               什么从前身仓库导进了 `docs/legacy/`、什么有意留在原仓、以及怎么复验

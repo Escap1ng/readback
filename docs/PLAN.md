@@ -7,26 +7,28 @@
 
 | 事实 | 数值 | 怎么复验 |
 |---|---|---|
-| 新仓 | 5 commits / 16 个跟踪文件 / 远程 `origin` = `Escap1ng/readback`（**私有**）/ 工作树干净 | `git rev-list --count HEAD`；`git ls-files \| wc -l`；`git remote -v`；`git status --porcelain` → 空；私有性：`curl -o /dev/null -w '%{http_code}' https://api.github.com/repos/Escap1ng/readback` → 404（带 token 读则 `PRIVATE`） |
-| M0·④ 已交付且自查真能红 | 46 条规则 | `python docs/m0-inventory-check.py` → 46 条 / exit 0；`--self` → 三段都咬住 |
-| M0·①②③ | 未启动；①② 卡在同一份真实转录 | RFC-0004 §6、`BOOTSTRAP.md` §5（本机 `$HOME` 无 `.claude`） |
-| 档案同一性 | 6/6 SAME（两边 blob 对象号相等） | `LEGACY-MANIFEST.md` §4 那段 `while read` 循环 |
+| 新仓 | 6 commits / 17 个跟踪文件（**含本次提交**；这类数只会变大，以命令为准）/ 远程 `origin` = `Escap1ng/readback`（**私有**）/ 工作树干净 | `git rev-list --count HEAD`；`git ls-files \| wc -l`；`git remote -v`；`git status --porcelain` → 空；私有性：`curl -o /dev/null -w '%{http_code}' https://api.github.com/repos/Escap1ng/readback` → 404（带 token 读则 `PRIVATE`） |
+| M0·④ 已交付，自查器**不需要旧仓也能跑** | 46 条规则 + 自述数字已纳进断言 | `python docs/m0-inventory-check.py` → 46 条 / exit 0；`--self` → 4 段咬住并明说跳过哪段（带 `--src-if-present` 则 5 段） |
+| M0·①②③ | ① 可开工（主料改成自造快照，见 T3）；② 仍等真实转录；③ 未启动 | RFC-0004 §6 的 M0 条；`BOOTSTRAP.md` §5（本机 `$HOME` 无 `.claude`） |
+| 档案同一性 | 6/6 `OK`——**单仓自证，不碰旧仓不碰网** | `LEGACY-MANIFEST.md`「复验 · 第一级」那段循环（阴性对照：把任一期望值改错一位必须报 `DRIFT`） |
 | **旧仓可搬运性（本轮新发现，最紧）** | 导入锚点 `ddcbf4f` **不在**远程 `main` 上；本地领先 5 条，且远程无独有提交（纯 fast-forward） | `git -C ../kvba ls-remote origin refs/heads/main` → `ed8f700`；`git -C ../kvba merge-base --is-ancestor ddcbf4f ed8f700` → 非 0；`git -C ../kvba rev-list --count @{u}..HEAD` → 5，`HEAD..@{u}` → 0 |
 
 最后一条的重量：`README.md:25`、`RFC-0004:6`、`LEGACY-MANIFEST:3` 三处都把"按行号能取到原文"押在 `ddcbf4f` 上，而这个对象今天只存在于这台机器。**这个仓库的证据链，锚点是单点的。**
 
 ## 2. TODO
 
-顺序即依赖。只有 T0 与 T1 能并行，其余别跨阶段抢。M1 的入口是 T1+T2，M2 的入口是 T3，M3/M4 在 M2 出报告之前不动。
+顺序即依赖。T0 已完成（2026-09-21）。**T3 解耦之后不再排在 T1 后面**——M0 那份唯一验收物可以在没有旧仓、没有网络的情况下开工。M1 的入口仍是 T1+T2，M2 的入口是 T3，M3/M4 在 M2 出报告之前不动。
 
-### T0 · 清掉本仓文档的 4 处自述缺陷（agent，无需联网，今天就能做）
+### T0 · 清掉本仓文档的 4 处自述缺陷 —— **已完成（2026-09-21）**
+
+下面四条是**改动前的状态**，留着当记录（"现在"字样都指当时）；改法与验证见末尾「结果」段。
 
 1. `RFC-0004:76`「建回放语料（**本仓库** 47 commits…）」——指代随迁仓漂移：47 属旧仓，新仓是 4。`:6` 的免责只覆盖了 `file:line` 和 RFC-0003，没盖住这句，而 M0·① 正卡在这个指代上。
 2. `RFC-0004:16/53/68/77` 的**目标**口径仍写 `kvba`（`.kvba/review.md`、`kvba report --md`、`npx kvba@latest`），与 `:130` §10 落法和 README 的 `readback` / `.readback/report.md` 冲突 → M1 照哪条实现，文档里现在有两个答案。注意 `:36`/`:144` 的 `.kvba/next-prompt.md` 是对旧产品的历史事实，**那两处不改**。
 3. `M0-rules-inventory.md:165` 的种子拆分「C 组 7 + D 组 9 + B 组 3 + E-01/A-07」对不上：D 组种子实为 10 条（D-01..D-10），E-01/A-07 的处置是结构件不是种子；这串加起来 21，而标题"正好 20"本身是对的（B3+C7+D10）。
 4. 同段「打扰机占了**一多半**」——实际 10/46 ≈ 22%。括号里的枚举（E 组 5、F 组 3、D-11、C-09）是对的；"一多半"只在 E/F 两组内部成立（5/8、3/5）。
 
-**判据**：改前后逐处 `git diff` 取证；措辞类每处出 2–3 版挑；`python docs/m0-inventory-check.py` 与 `--self` 改完仍须分别 exit 0。**顺带把"分组计数与自述数字一致"纳进那个自查器**——它现在只查处置标没标，所以 3、4 两条它是放过去的，下一次照样靠眼睛才发现。附带在 README Layout 加一行指向本文（不留孤岛，复盘 §四 第 21 行的教训）。
+**结果（2026-09-21 四条全改完）**：四条各改一处，另加两处顺带修——README Layout 补了本文一行（不留没指针的孤岛），`M0-rules-inventory.md` 的"出处"那条写清了「旧仓行号是**取证锚点，不是运行依赖**」。种子拆成机器可回读的形状「B 组 3 + C 组 7 + D 组 10」；打扰机那句从"一多半"改成「10 条，占 46 条的 22%」，并把原文错处留成一条更正记录（它本身就是 §H 第一行点名的形态）。**关键增量：自查器现在会回读这些自述数字**——总数、分组、四类处置分布、★ 数、占比与分母、种子拆分加和，**读不到也算失败**（防止改个措辞就把检查静默绕开）。六项变异测试全咬住：46→47、D 组 10→9、22%→25%、分母 46→40、★ 6→9、删掉那句自述数字，每个都报对应问题。
 
 ### T1 · 把证据搬到这台机器以外（人 + 网络，最优先的人工动作）
 
@@ -41,9 +43,10 @@
 - 判据：≥90% 的 shell 类调用能取到 0/非 0。取不到 → 走 RFC-0004 §8 的退路（L1 退 git-only），形态不变、M2 少一类规则，**不重开讨论**。
 - 硬边界：结论出来之前这只是个假设，不得写进代码、README 主张或任何产物文案（§11 的"未验证"级）。
 
-### T3 · M0·① 回放语料 + M0 唯一的那份验收物（agent，依赖 T1）
+### T3 · M0·① 回放语料 + M0 唯一的那份验收物（agent，**已解耦：不再依赖 T1 与旧仓**）
 
-- 旧仓 47 commits 的 numstat / 作者 / 消息（2026-09-21 复验：`git -C ../kvba rev-list --count HEAD` = 47、`shortlog -sn --all \| wc -l` = 4）；不足则自造 20 个含已知缺陷的快照仓库。真实转录进仓的一律脱敏，`*.jsonl` 已被 `.gitignore` 挡住，别绕。
+- **主料**：自造 20 个含已知缺陷的快照仓库（形态取自复盘 §四 那 38 类，已在 `docs/legacy/` 里，本仓可读）+ 本仓自己的 git 历史。派生数据脱敏后入库，`/m0/corpus` 与 `*.jsonl` 已被 `.gitignore` 挡住——只提交派生出来的命中统计，不提交原始转录。
+- **可选加料**：前身仓 47 commits 的 numstat / 作者 / 消息。**只能加料，不能当判据**：那 47 条与导入锚点 `ddcbf4f` 至今只在一台机器上（RFC-0004 §6·① 已按此改口径，解耦规则见 §10 末条）。
 - 产物：`docs/replay-baseline.md` —— 候选规则的命中数 + 人工核对的真阳率。**没有这份数不许进 M2**（§6 原文判据）。
 
 ### T4 · M0·③ SQLite 迁移 RFC（agent，可与 T2/T3 并行）

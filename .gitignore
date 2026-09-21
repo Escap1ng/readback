@@ -4,6 +4,8 @@
 /node_modules
 /dist
 *.log
+# docs/ 下的自查脚本被 import 时会生成，别让它进仓
+__pycache__/
 
 # 本工具往用户项目里写的目录（产品自身开发时也不要把它提交进来）
 /.readback
