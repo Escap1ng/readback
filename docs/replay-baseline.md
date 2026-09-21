@@ -7,7 +7,7 @@
 
 ## 结论
 
-**状态：M0·① 半程** —— 命中数与机器判定的真阳率已出，**人工抽核未做**（§6 的验收要的是后者）。
+**状态：M0·① 半程** —— 命中数与机器判定的真阳率已出；**人工核对 0/20**，工作单在 `docs/manual-audit.md`。
 
 - 20 个快照仓库 / 116 次提交，规则 20 条，共发声 214 次：真阳 84、假阳 22、未登记 108；可判 precision **79%**，登记过的正例漏报 0 次。
 - 坏证据（命中了但证据落不了地，已丢弃并计数）：**0** 条。非 0 就说明规则在编造出处，先修规则再谈覆盖率。
@@ -48,21 +48,21 @@
 
 | 规则 | 仓库 | 提交 | 文件 | 行 | 说明 |
 |---|---|---|---|---|---|
-| C-02 | repo-01 | edc65d22 | `src/core.rs` | 1 | 改源未改测 |
-| C-02 | repo-01 | a8add70b | `src/svc.py` | 1 | 改源未改测｜反例被命中 |
-| C-02 | repo-02 | df63d139 | `src/svc.py` | 1 | 改源未改测｜反例被命中 |
+| C-02 | repo-01 | 6a4758a7 | `src/queue.rs` | 1 | 改源未改测 |
+| C-02 | repo-01 | 72895a42 | `src/lib.rs` | 1 | 改源未改测 |
+| C-02 | repo-01 | bfb1d6db | `src/main.rs` | 1 | 改源未改测 |
 | C-04 | repo-01 | b67c1ed1 | `src/fetch.rs` | 1 | 外部调用未见错误分支 |
 | C-04 | repo-05 | 907fdb6a | `src/fetch.rs` | 1 | 外部调用未见错误分支 |
 | C-04 | repo-10 | 0fdafa20 | `src/fetch.rs` | 1 | 外部调用未见错误分支 |
 | C-05 | repo-01 | 56a3e563 | `Cargo.toml` | 1 | 决策文件变更 |
 | C-05 | repo-03 | aafc6043 | `Cargo.toml` | 1 | 决策文件变更 |
 | C-05 | repo-04 | 31c7525f | `Cargo.toml` | 1 | 决策文件变更 |
+| D-01 | repo-01 | edc65d22 | `src/core.rs` | 1 | line_delta=24 |
 | D-01 | repo-01 | a66d2dba | `src/a.rs` | 1 | line_delta=81 |
 | D-01 | repo-04 | 094bd6ff | `src/a.rs` | 1 | line_delta=81 |
-| D-01 | repo-08 | 094bd6ff | `src/a.rs` | 1 | line_delta=81 |
+| D-02 | repo-01 | ec5def60 | `src/agg.rs` | 1 | line_delta=16 |
 | D-02 | repo-01 | 5e0e49e0 | `src/mid.rs` | 1 | line_delta=13 |
-| D-02 | repo-18 | 8e0a5e8d | `src/mid.rs` | 1 | line_delta=13 |
-| D-02 | repo-19 | 62e70a6b | `src/mid.rs` | 1 | line_delta=13 |
+| D-02 | repo-01 | 56a3e563 | `.github/workflows/ci.yml` | 1 | line_delta=12 |
 | D-03 | repo-01 | b67c1ed1 | `src/fetch.rs` | 1 | 新增外部调用 |
 | D-03 | repo-02 | 02a1803f | `src/pull.rs` | 2 | 新增外部调用｜反例被命中 |
 | D-03 | repo-05 | 907fdb6a | `src/fetch.rs` | 1 | 新增外部调用 |
@@ -86,7 +86,7 @@
 | D-09 | repo-12 | 5d473000 | `src/util.py` | 1 | 纯格式化 |
 | D-10 | repo-01 | d84a39be | `README.md` | 1 | 纯文档 |
 | D-10 | repo-01 | a1b9ead9 | `README.md` | 1 | 纯文档 |
-| D-10 | repo-11 | 2973ea3e | `README.md` | 1 | 纯文档 |
+| D-10 | repo-02 | 9a0341d2 | `docs/guide.md` | 1 | 纯文档 |
 | G-01 | repo-01 | d84a39be | `README.md` | 3 | 引用不存在的 docs/arch-v2.md |
 | G-01 | repo-01 | d84a39be | `docs/实现规划.md` | 3 | 引用不存在的 docs/arch-v2.md |
 | G-01 | repo-01 | d84a39be | `docs/实现规划.md` | 3 | 引用不存在的 deploy/hooks.json |
@@ -109,7 +109,8 @@
 
 ## 这份数不能证明什么
 
-- **§6 的 M0 验收要的是「人工核对的真阳率」，这份报告给的是机器判定**（命中对不对得上语料登记的 pos/neg）。机器判的 79% 不等于被核对过的真阳率。要收口 M0，得从下面抽样表里人工抽 20 条写回判定 —— 在那之前 **M0·① 只算完成一半，不许据此进 M2**。
+- §6 的 M0 验收要的是「人工核对的真阳率」，本节表里的 precision 是**机器判定**（命中对不对得上语料登记的 pos/neg）。人工进度见上面的状态行；工作单 `docs/manual-audit.md` 填完，本文结论跟着变。**在人工核完之前，不许拿这份数进 M2。**
+- 抽核工作单是「每条规则各 1 条」的分层抽样，用来让每条规则过一次人眼；**它不能当整体 precision 的估计**——那是 214 次发声上的机器判定，或以后更大规模的均匀抽样。
 - 语料是**自造**的：命中率高只说明规则在「按形态写出来的东西」上有效，不等于在真实仓库里也有效；真实语料要等 M0·① 之外的取样（见 `BOOTSTRAP.md` §5）。
 - C-01 / C-03 / C-07 这类**要看测试退出码或 Agent intent 的规则本轮根本没有测**——git 里没有那个信息，这正是 M0·② 要证伪的东西。种子 20 条里本轮能测的是上表这些。
 - C-02 在 git-only 条件下被弱化过：原判据是"tests 为空"（指测试事件），这里退成"改源文件而未改测试文件"。这是**口径变化**，不是同一条规则的复现。

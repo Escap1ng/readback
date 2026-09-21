@@ -17,6 +17,7 @@ M1/M2 要用 Rust 重写，这张表就是它的规格。
 import argparse
 import json
 import pathlib
+import random
 import re
 import subprocess
 import sys
@@ -352,13 +353,16 @@ def replay(man, rules, corpus=CORPUS):
                     s["hits"] += 1
                     if path in want.get(rid, set()):
                         s["tp"] += 1
-                        s["samples"].append((rec["name"], cs["sha"][:8], path, ev["line"], note))
+                        s["samples"].append((rec["name"], cs["sha"][:8], path, ev["line"], note, "真阳", ev["excerpt"]))
                         hit_files[rid].add(path)
                     elif path in ban.get(rid, set()):
                         s["fp"] += 1
-                        s["samples"].append((rec["name"], cs["sha"][:8], path, ev["line"], note + "｜反例被命中"))
+                        s["samples"].append((rec["name"], cs["sha"][:8], path, ev["line"],
+                                             note + "｜反例被命中", "假阳", ev["excerpt"]))
                     else:
                         s["unk"] += 1     # 语料没登记过这里该不该响 —— 不能算假阳
+                        s["samples"].append((rec["name"], cs["sha"][:8], path, ev["line"], note,
+                                             "未登记", ev["excerpt"]))
         for rid, files in want.items():
             if rid in stats and files and not (hit_files[rid] & files):
                 # 漏报按"这个仓登记过该规则的正例，却一次都没响"计：
@@ -379,6 +383,8 @@ def render(stats, man, rules):
     bad = sum(s["bad_ev"] for s in stats.values())
     zero = [rid for rid, _, _, _ in rules if stats[rid]["hits"] == 0]
     nsteps = sum(len(r["steps"]) for r in man["repos"])
+    verdicts = [r for r in read_audit() if r["verdict"] in ("真", "误")]
+    v_true = sum(1 for r in verdicts if r["verdict"] == "真")
     out = [
         "# M0·① 回放基线（生成物）",
         "",
@@ -392,7 +398,10 @@ def render(stats, man, rules):
         "",
         "## 结论",
         "",
-        "**状态：M0·① 半程** —— 命中数与机器判定的真阳率已出，**人工抽核未做**（§6 的验收要的是后者）。",
+        ("**状态：M0·① 半程** —— 命中数与机器判定的真阳率已出；**人工核对 %d/20**，"
+         "工作单在 `docs/manual-audit.md`。" % len(verdicts)) if len(verdicts) < 20 else
+        ("**状态：M0·① 已收口** —— 人工核对 20 条完成，人工真阳率 **%s**（误报 %d 条）。"
+         % (pct(v_true, len(verdicts)), len(verdicts) - v_true)),
         "",
         f"- {man['n_repos']} 个快照仓库 / {nsteps} 次提交，规则 {len(rules)} 条，共发声 {tp + fp + unk} 次："
         f"真阳 {tp}、假阳 {fp}、未登记 {unk}；可判 precision **{pct(tp, tp + fp)}**，登记过的正例漏报 {fn} 次。",
@@ -435,9 +444,11 @@ def render(stats, man, rules):
             out.append(f"| {rid} | {smp[0]} | {smp[1]} | `{smp[2]}` | {smp[3]} | {smp[4]} |")
     out += ["", "## 这份数不能证明什么",
             "",
-            "- **§6 的 M0 验收要的是「人工核对的真阳率」，这份报告给的是机器判定**（命中对不对得上语料"
-            "登记的 pos/neg）。机器判的 79% 不等于被核对过的真阳率。要收口 M0，得从下面抽样表里人工抽 "
-            "20 条写回判定 —— 在那之前 **M0·① 只算完成一半，不许据此进 M2**。",
+            "- §6 的 M0 验收要的是「人工核对的真阳率」，本节表里的 precision 是**机器判定**（命中对不对"
+            "得上语料登记的 pos/neg）。人工进度见上面的状态行；工作单 `docs/manual-audit.md` 填完，"
+            "本文结论跟着变。**在人工核完之前，不许拿这份数进 M2。**",
+            "- 抽核工作单是「每条规则各 1 条」的分层抽样，用来让每条规则过一次人眼；"
+            "**它不能当整体 precision 的估计**——那是 214 次发声上的机器判定，或以后更大规模的均匀抽样。",
             "- 语料是**自造**的：命中率高只说明规则在「按形态写出来的东西」上有效，不等于在真实仓库里也有效；"
             "真实语料要等 M0·① 之外的取样（见 `BOOTSTRAP.md` §5）。",
             "- C-01 / C-03 / C-07 这类**要看测试退出码或 Agent intent 的规则本轮根本没有测**——"
@@ -452,6 +463,70 @@ def render(stats, man, rules):
             "20 个仓报出 101 次命中，看着像覆盖率高，其实是同一句话说了 101 遍。",
             ""]
     return "\n".join(out)
+
+
+# --------------------------------------------------------------- 人工抽核工作单
+AUDIT = ROOT / "docs" / "manual-audit.md"
+VERDICTS = ("真", "误", "待定")
+
+
+def audit_rows(stats, rules, seed=7):
+    """每条规则各抽 1 条 = 20 行。这不是用来估整体 precision 的（那是机器判定的活），
+    是用来让目录 v1 的每一条都过一次人眼。选择用固定 seed，逐次可复现。"""
+    rnd = random.Random(seed)
+    rows = []
+    for rid, name, src, _ in rules:
+        sm = stats[rid]["samples"]
+        if sm:
+            rows.append((rid, name, src, rnd.choice(sm)))
+    return rows
+
+
+def render_audit(rows, seed=7):
+    out = [
+        "# 人工抽核工作单（M0·① 的另一半）",
+        "",
+        "`docs/replay-baseline.md` 里的 79% 是**机器判定**——机器只知道自己登记过的 pos/neg。",
+        "§6 的验收要的是「人工核对的真阳率」，所以这张表由**你**填，不由我填。",
+        "",
+        "**怎么填**：最后一列写 `真`（确实是该抓的缺陷）/ `误`（不该抓，是误报）/ `待定`。",
+        "填完跑 `python m0/replay.py --audit-check` 核对，再 `python m0/replay.py --write`",
+        "把人工结论折回基线报告。**一条都别替我勾**——这 20 条的价值就在它是别人看的。",
+        "",
+        f"抽样规则：seed={seed}，每条规则各 1 条（{len(rows)} 行）。摘录已直接抄在下面，",
+        "判定不依赖 `m0/corpus/` 还在不在；坐标留着供你想看上下文。",
+        "",
+        "| # | 规则 | 名称 | 机器判定的桶 | 仓库 | 提交 | 文件:行 | 摘录 | 判定 |",
+        "|---|---|---|---|---|---|---|---|---|",
+    ]
+    for i, (rid, name, src, smp) in enumerate(rows, 1):
+        repo, sha, path, line, note, bucket, excerpt = smp
+        ex = excerpt.replace("|", "\\|").replace("\n", " ")
+        out.append(f"| {i} | {rid} | {name} | {bucket} | {repo} | {sha} | `{path}:{line}` | `{ex[:80]}` |  |")
+    out += ["", "## 填完之后",
+            "",
+            "- `python m0/replay.py --audit-check` 会报：填了几条、坐标是否仍与当前语料一致。",
+            "- 全填完则 `--write` 会算出「人工核对真阳率」并折进基线报告；M0·① 才算收口。",
+            ""]
+    return "\n".join(out) + "\n"
+
+
+def read_audit(path=AUDIT):
+    """解析工作单 → [(行号, 规则, 桶, 仓库, 提交, 文件:行, 判定)]。"""
+    if not path.exists():
+        return []
+    rows = []
+    for line in path.read_text(encoding="utf-8").split("\n"):
+        m = re.match(r"^\| (\d+) \| ([A-Z]-\d\d) \|", line)
+        if not m:
+            continue
+        c = [x.strip() for x in line.strip().strip("|").split("|")]
+        if len(c) < 9:
+            continue
+        # 只有摘录那一格可能含转义竖线，所以左侧 0..6 按位取、判定从末尾取
+        rows.append({"idx": int(c[0]), "rid": c[1], "bucket": c[3], "repo": c[4],
+                     "sha": c[5], "fileline": c[6].strip("`"), "verdict": c[-1]})
+    return rows
 
 
 def selftest(corpus=CORPUS):
@@ -483,9 +558,51 @@ def selftest(corpus=CORPUS):
     return 0 if all(checks.values()) else 1
 
 
+def audit(corpus=CORPUS, seed=7, force=False):
+    man = json.loads((corpus / "manifest.json").read_text(encoding="utf-8"))
+    rows = audit_rows(replay(man, RULES, corpus), RULES, seed)
+    if AUDIT.exists() and not force:
+        filled = [r for r in read_audit() if r["verdict"] in VERDICTS]
+        if filled:
+            print(f"[拒绝覆盖] {AUDIT.name} 里已有 {len(filled)} 条判定。要重来加 --force（会清掉你填的判定）")
+            return 1
+    AUDIT.write_text(render_audit(rows, seed), encoding="utf-8", newline="\n")
+    print(f"→ 已写 {AUDIT.relative_to(ROOT).as_posix()}：{len(rows)} 行，判定列留空等你填")
+    return 0
+
+
+def audit_check(corpus=CORPUS, seed=7):
+    rows = read_audit()
+    if not rows:
+        print("[FAIL] 读不到工作单 —— 先跑 python m0/replay.py --audit")
+        return 1
+    judged = [r for r in rows if r["verdict"] in VERDICTS]
+    print(f"工作单 {len(rows)} 行；已判定 {len(judged)}；空白 {len(rows) - len(judged)}")
+    for v in VERDICTS:
+        print(f"  {v}: {sum(1 for r in judged if r['verdict'] == v)}")
+    # 坐标核对：工作单是某个语料版本的产物，语料重建/规则改动后必须仍能落地
+    man = json.loads((corpus / "manifest.json").read_text(encoding="utf-8"))
+    live = set()
+    for rid, _, _, smp in audit_rows(replay(man, RULES, corpus), RULES, seed):
+        live.add((rid, smp[0], smp[1], f"{smp[2]}:{smp[3]}"))
+    sheet = {(r["rid"], r["repo"], r["sha"], r["fileline"]) for r in rows}
+    drift = sheet - live
+    print("坐标核对：", "全部 20 条仍能落到当前语料的这次命中" if not drift else f"{len(drift)} 条坐标已失效 → {sorted(drift)[:3]}")
+    if len(judged) < len(rows):
+        print("状态：未填完 —— M0·① 仍是半程")
+        return 0 if not drift else 1
+    true = sum(1 for r in judged if r["verdict"] == "真")
+    fp = len(judged) - true
+    print(f"人工核对真阳率：{pct(true, true + fp)}（误报 {fp}/{len(judged)} 条，M2 门槛 ≤20%）")
+    return 0 if (not drift and fp * 5 <= len(judged)) else 1
+
+
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--write", action="store_true", help="把结果写进 docs/replay-baseline.md")
+    ap.add_argument("--audit", action="store_true", help="生成人工抽核工作单 docs/manual-audit.md")
+    ap.add_argument("--audit-check", action="store_true", dest="audit_check")
+    ap.add_argument("--force", action="store_true", help="配合 --audit：覆盖已填的工作单")
     ap.add_argument("--self", action="store_true", dest="selftest_")
     ap.add_argument("--corpus", default=str(CORPUS))
     a = ap.parse_args()
@@ -495,6 +612,10 @@ def main():
         return 1
     if a.selftest_:
         return selftest(corpus)
+    if a.audit:
+        return audit(corpus, force=a.force)
+    if a.audit_check:
+        return audit_check(corpus)
     man = json.loads((corpus / "manifest.json").read_text(encoding="utf-8"))
     stats = replay(man, RULES, corpus)
     text = render(stats, man, RULES)

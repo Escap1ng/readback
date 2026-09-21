@@ -47,6 +47,7 @@ docs/m0-inventory-check.py            上面那份清单的自查（漏抄 / 未
 m0/build-corpus.py                    M0·① 语料生成器：18 个缺陷形态 + 5 类反例，同 seed 逐字节可复现，产物落在被 .gitignore 挡住的 `m0/corpus/`
 m0/replay.py                          把 20 条规则（写成数据表）跑在语料上；每条命中必须带可核证据，核不上就丢弃并计数
 docs/replay-baseline.md               上两者的输出（生成物，数字不手填）：命中数 / 真阳 / 假阳 / 未登记 + 人工抽核还欠着
+docs/manual-audit.md                  人工抽核工作单：20 行、每条规则各 1 条，判定列留空——填完 M0·① 才收口
 docs/LEGACY-MANIFEST.md               什么从前身仓库导进了 `docs/legacy/`、什么有意留在原仓、以及怎么复验
 docs/legacy/                          前身仓库的只读档案（复盘、交接报告、RFC-0003、原始规格、旧 README、对拍脚本）——**只读，改了就破坏档案**
 ```
