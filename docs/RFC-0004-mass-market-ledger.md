@@ -127,9 +127,14 @@ L4 产物   新增 kvba report --md / PR 段 / commit trailer / 每日 digest
 
 **命名判据**：① 不含任何宿主名（`claude-*` 会把跨 Agent 定位一次性卖掉）；② 能做二进制名与 CLI 动词；③ 说得出产品的核心动作，不是抽象比喻；④ 与既有同域项目不撞车（已排掉 `receipts`：GitHub 上存在 `chrishutchinson/claude-receipts`，同处相邻语义，会被读成仿作）。
 
-**推荐：`readback`**（回读）——无线电/航空规程里"接收方把指令复述一遍以证明听懂"的那一步，正是本产品的核心机制（§6·M3）与核心主张（你得能解释你要发的代码）。落法：仓库 `readback`，二进制 `readback`，产物 `.readback/report.md`，安装 `npx readback@latest install`。
+**推荐：`readback`**（回读）——无线电/航空规程里"接收方把指令复述一遍以证明听懂"的那一步，正是本产品的核心机制（§6·M3）与核心主张（你得能解释你要发的代码）。落法：仓库 `readback`，二进制 `readback`，产物 `.readback/report.md`，安装 `npx @readback/cli@latest install`（npm 裸名已被占，见下）。
 备选：**`blindspot`**（痛点框架，一眼懂，缺点是只讲问题不讲做法）；**`witness`**（证据框架，沉稳，缺点是搜索噪音大、npm 同名概率高）。
-> 占用核验未做完全：npm registry 与 crates.io 的探测分别被 403 与反爬挡住，本机无法定论。开新仓前先跑 `npm view readback` / `cargo search readback` / 搜 GitHub 同名，任一被占则退到作用域名 `@readback/cli`（仓库名不变）。
+> **占用核验已做（2026-09-21 实测；命令与原始输出见 `BOOTSTRAP.md` §1 结果表）——原文那句"npm 与 crates.io 探测被 403 与反爬挡住，本机无法定论"已作废。** 结论：三个候选名在两个 registry 上**全部被占**。
+> - `blindspot`：npm 是"扫 Node 项目缺哪些常用工具"的 DX CLI，crates.io 是"装/更新单二进制应用"的安装器——**两处都是同域项目**，按本节判据 ④ 直接出局（与 `receipts` 同一理由）。
+> - `witness`：npm 0.0.2（词典义占位）、crates.io 0.3.0（文件监视器）——本节预判的"npm 同名概率高"被证实。
+> - `readback`：npm 是航空管制通话转写（`borisdiakur/readback`，keywords atc/vatsim/ivao），crates.io 是 Tauri IPC 库的**占名预留**（`0.0.0 # This release reserves the crate name`）。两者都**不构成仿作风险**（不同域），但裸名都用不了。
+>
+> 处置：**仓库名与二进制名不变**（GitHub 仓名按用户命名空间，不受 registry 占用影响）；npm 退作用域名 `@readback/cli`；crate 若发则用 `readback-cli`（实测未占）。注意 `@readback/cli` 能否成立取决于 npm 上是否存在名为 `readback` 的用户/组织——`npmjs.com/~readback` 本机返回 403，**这一条仍未验证**，须由人登录后核（`BOOTSTRAP.md` §1）。GitHub 侧两条核验（`gh search repos` / `gh api /users/readback`）本机被沙箱策略挡住，同样未做。
 
 **迁什么、留什么**
 
