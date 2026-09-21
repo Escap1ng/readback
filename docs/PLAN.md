@@ -7,7 +7,7 @@
 
 | 事实 | 数值 | 怎么复验 |
 |---|---|---|
-| 新仓 | 6 commits / 17 个跟踪文件（**含本次提交**；这类数只会变大，以命令为准）/ 远程 `origin` = `Escap1ng/readback`（**私有**）/ 工作树干净 | `git rev-list --count HEAD`；`git ls-files \| wc -l`；`git remote -v`；`git status --porcelain` → 空；私有性：`curl -o /dev/null -w '%{http_code}' https://api.github.com/repos/Escap1ng/readback` → 404（带 token 读则 `PRIVATE`） |
+| 新仓 | 提交数与文件数**由命令自证，本文不写死**（写下绝对数的那一刻就开始过期，2026-09-21 就错过一次）：远程 `origin` = `Escap1ng/readback`（**私有**），工作树干净 | `git rev-list --count HEAD`；`git ls-files \| wc -l`；`git remote -v`；`git status --porcelain` → 空；私有性：`curl -o /dev/null -w '%{http_code}' https://api.github.com/repos/Escap1ng/readback` → 404（带 token 读则 `PRIVATE`） |
 | M0·④ 已交付，自查器**不需要旧仓也能跑** | 46 条规则 + 自述数字已纳进断言 | `python docs/m0-inventory-check.py` → 46 条 / exit 0；`--self` → 4 段咬住并明说跳过哪段（带 `--src-if-present` 则 5 段） |
 | M0·①②③ | ① 可开工（主料改成自造快照，见 T3）；② 仍等真实转录；③ 未启动 | RFC-0004 §6 的 M0 条；`BOOTSTRAP.md` §5（本机 `$HOME` 无 `.claude`） |
 | 档案同一性 | 6/6 `OK`——**单仓自证，不碰旧仓不碰网** | `LEGACY-MANIFEST.md`「复验 · 第一级」那段循环（阴性对照：把任一期望值改错一位必须报 `DRIFT`） |
