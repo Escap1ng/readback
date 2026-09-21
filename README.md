@@ -2,7 +2,7 @@
 
 **回读** — the radio-procedure step where the receiver repeats an instruction back, proving they actually understood it. That is what this tool asks of code your AI agent wrote.
 
-> **Status: M0 — documents only.** No runnable code lives here yet. M0 is a data-collection milestone, not a feature milestone; see `docs/RFC-0004-mass-market-ledger.md` §6. Any claim below that is not yet true is written as a target, never as a feature.
+> **Status: M0 — evidence tooling only.** Nothing here ships as the product yet. The executable code in the repo is measurement tooling that is meant to be thrown away once the rules migrate: `docs/m0-inventory-check.py` and `m0/*.py`. M0 is a data-collection milestone, not a feature milestone; see `docs/RFC-0004-mass-market-ledger.md` §6. Any claim below that is not yet true is written as a target, never as a feature.
 
 ## The problem
 
@@ -33,7 +33,7 @@ This repo inherits from a private predecessor (KVBA v0.2.0), kept as a read-only
 - 三条主张：无证据不出声、产物优先、零接线优先。
 - 主产物是文件（`.readback/report.md`、PR 摘要段、commit trailer、每周 digest），不是弹窗。桌面胶囊与系统通知只是这份产物的订阅者。
 - 前身是私有项目 KVBA v0.2.0（保留为参考实现）。RFC-0004 §11 把结论分成「本机实测 / 静态审计 / 未验证」三级；标为未验证的不得当事实写进代码。
-- **当前只有文档，没有可运行代码。** 需要人肉联网执行的步骤（改名核验、建远程仓、签名与公证询价）写在 `docs/BOOTSTRAP.md`。
+- **当前只有取证夹具，没有产品代码。** `docs/m0-inventory-check.py` 与 `m0/*.py` 是给规则跑数用的，规则迁完就该删——留着就成了永远绿的检查器。需要人肉联网执行的步骤（改名核验、建远程仓、签名与公证询价）写在 `docs/BOOTSTRAP.md`。
 
 ## Layout
 
@@ -43,7 +43,10 @@ docs/BOOTSTRAP.md                     steps that require a human terminal (name 
 docs/PLAN.md                          执行计划与 TODO（T0–T6 泳道，每行带复验命令）；转公开前的收口清单在 BOOTSTRAP §7
 docs/HANDOFF.md                       任务交接：换会话/换机器怎么冷启动、本轮改了什么、四个已踩过的坑
 docs/M0-rules-inventory.md            M0·④ 交付物：旧仓 46 条确定性启发式逐条抄成数据（含"哪些缺陷形态今天根本没有检测器"的初判）
-docs/m0-inventory-check.py            上面那份清单的自查（漏抄 / 未分类 / 表格塌陷），`--self` 三段负向对照；规则迁完就该删
+docs/m0-inventory-check.py            上面那份清单的自查（漏抄 / 未分类 / 表格塌陷 / 自述数字对不对），`--self` 负向对照；规则迁完就该删
+m0/build-corpus.py                    M0·① 语料生成器：18 个缺陷形态 + 5 类反例，同 seed 逐字节可复现，产物落在被 .gitignore 挡住的 `m0/corpus/`
+m0/replay.py                          把 20 条规则（写成数据表）跑在语料上；每条命中必须带可核证据，核不上就丢弃并计数
+docs/replay-baseline.md               上两者的输出（生成物，数字不手填）：命中数 / 真阳 / 假阳 / 未登记 + 人工抽核还欠着
 docs/LEGACY-MANIFEST.md               什么从前身仓库导进了 `docs/legacy/`、什么有意留在原仓、以及怎么复验
 docs/legacy/                          前身仓库的只读档案（复盘、交接报告、RFC-0003、原始规格、旧 README、对拍脚本）——**只读，改了就破坏档案**
 ```

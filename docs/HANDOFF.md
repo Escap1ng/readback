@@ -7,6 +7,8 @@
 ```bash
 python docs/m0-inventory-check.py            # 期望：结论:通过，exit 0
 python docs/m0-inventory-check.py --self     # 期望：报出多段问题、exit 0，并明说跳过了哪段
+python m0/build-corpus.py --seed 7 --repos 20 --full   # 语料是可删重建的派生物，不入库
+python m0/replay.py --self                   # 期望：四段负向对照全咬住（约 22s，Windows 上靠只读缓存）
 ```
 
 ```bash
@@ -35,19 +37,23 @@ L
 | M0·① 语料口径改向：主料=自造 20 个含已知缺陷的快照仓库 + 本仓历史，前身仓 47 commits 降为可选加料 | 解耦之后 ① 不再等人和网络，可立刻开工 |
 | 建远程仓 `Escap1ng/readback`、`LICENSE`=Apache-2.0、名字占用核验结论落文档（三个候选名全被占） | 见 `BOOTSTRAP.md` §1/§2/§4 |
 | 立 `BOOTSTRAP.md` §0 与 §7 | §0：旧仓那 5 条（含导入锚点）还压在本地；§7：转公开前的五条收口清单 |
+| T3 做了半程：`m0/build-corpus.py`（18 形态 + 5 类反例，同 seed 可复现）+ `m0/replay.py`（20 条规则写成数据表）→ `docs/replay-baseline.md` | §6 要的验收是"命中数 + **人工核对**的真阳率"。机器判定已出（真阳 84 / 假阳 22 / 未登记 108，precision 79%，坏证据 0），**人工抽 20 条没做**，所以 M0·① 只记半程，不许据此进 M2 |
 
 ## 现在卡着的三件事，各自等谁
 
 1. **等网络与人，agent 做不了**：`BOOTSTRAP.md` §0（推旧仓 5 条，解锁全部 `file:line` 指针对外可核性）、§1 剩下三条（`gh search repos`、`gh api /users/readback`、`npm org ls readback`——本机 auto 模式禁外部服务查询）、§5（取那份真实转录）。
 2. **等你拍板才能公开**：`BOOTSTRAP.md` §7 那张表。第 1 条最重——`docs/legacy/` 6 份档案来自**仍然私有**的前身仓，公开本仓等于公开那份 60KB 事故集。仓现在就是因此退回私有的。
-3. **谁都能接着做、不依赖任何外部条件**：T3（M0·① 语料与 `docs/replay-baseline.md`）、T4（M0·③ SQLite 迁移 RFC）、T5（§H 那张缺口表 → 38 类映射）。**建议下一步就是 T3**，因为 §6 写死了"没有那份数不许进 M2"。
+3. **谁都能接着做、不依赖任何外部条件**：T3 的剩余半步（从 `docs/replay-baseline.md` 抽样表里**人工抽 20 条**写回真阳判定——这是 M0·① 收口的唯一缺口）、T4（M0·③ SQLite 迁移 RFC）、T5（§H 缺口表 → 38 类映射）。目录 v1 该先砍哪条规则，基线已经给了答案：C-02 与 D-03 都是要先重写的（一个太吵，一个分不清"带不带错误处理"）。
 
-## 四个已踩过的坑（省你两小时）
+## 七个已踩过的坑（省你两小时）
 
 - **`git status` 干净不等于工作区字节干净**。4 份档案在盘上是 CRLF、在库里是 LF（`git ls-files --eol` 看 `w/crlf`），clean 滤镜让状态隐形。别拿工作区 sha256 当判据，本仓判据是 blob 对象号。
 - **直连 `github.com:443` 会随机挂**，而 `api.github.com` 照常通。push 失败先探代理再重试，用一次性参数 `git -c http.proxy=http://127.0.0.1:<端口>`，**别写进 git 配置**（端口会变）。
 - **检查器必须能红**。新加的任何断言都要配阴性对照：`--self` 那 5 段、档案循环改错一位期望值必须报 `DRIFT`。首跑就全绿的检查器，多半是它自己错了。
 - **本机无 `link.exe` / SDK 库** → `cargo test`、`cargo clippy` 只能 CI 验；`cargo fmt` 与 `rustc --emit=metadata` 本机可跑。所以第一个 Rust 提交必须连 CI 三件套一起落，且先证明 CI 能变红（`BOOTSTRAP.md` §6）。
+- **git 默认把非 ASCII 路径转成八进制转义**。任何按路径做比对/取内容的脚本都要带 `-c core.quotePath=false`，否则中文文件名对不上、证据核不上，规则会静默变成"永远不命中"。
+- **Windows 上"每条命中起一次 `git show`"会慢到跑不完**：第一版回放 4 分钟不结束，给只读查询加一层进程内缓存后 22 秒。写这类工具从一开始就缓存，别等超时。
+- **负向对照的夹具必须复用真实 id**：拿一个假 id 的"恒真规则"永远不可能被判成假阳（假阳的定义是"命中了登记为 neg 的文件"），于是负向对照自己成了一条假绿。第一版就是这样骗过了我——四段里两段"没咬住"才发现。
 
 ## 一条记要：解耦 ≠ 删指针
 
